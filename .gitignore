@@ -1,0 +1,7 @@
+# Temp files
+*~
+[#]*[#]
+
+# Config params for testing
+betfair_test.conf.json
+
