@@ -137,6 +137,39 @@ func TestListMarketBook(t *testing.T) {
 	}
 }
 
+func TestListMarketTypes(t *testing.T) {
+	filter := new(MarketFilter)
+	filter.MarketIds = []string{marketId}
+	res, err := s.ListMarketTypes(filter)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if len(res) < 1 {
+		t.Error("Result is empty")
+	}
+}
+
+func TestGetAccountDetails(t *testing.T) {
+	_, err := s.GetAccountDetails()
+	if err != nil {
+		t.Error(err.Error())
+	}	
+}
+
+func TestGetAccountFunds(t *testing.T) {
+	_, err := s.GetAccountFunds()
+	if err != nil {
+		t.Error(err.Error())
+	}	
+}
+
+func TestGetDeveloperAppKeys(t *testing.T) {
+	_, err := s.GetDeveloperAppKeys()
+	if err != nil {
+		t.Error(err.Error())
+	}	
+}
+
 func TestLogout(t *testing.T) {
 	if err := s.Logout(); err != nil {
 		t.Error(err.Error())
