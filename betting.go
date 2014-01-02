@@ -38,6 +38,7 @@ type MarketFilter struct {
 	ExchangeIds		[]string	`json:"exchangeIds,omitempty"`
 	EventTypeIds	[]string	`json:"eventTypeIds,omitempty"`
 	MarketCountries	[]string	`json:"marketCountries,omitempty"`
+	MarketIds		[]string	`json:"marketIds,omitempty"`
 }
 
 type PriceProjection struct {
@@ -156,6 +157,12 @@ type MarketDescription struct {
 	Clarifications		string
 }
 
+// MarketType Result.
+type MarketTypeResult struct {
+	MarketType	string
+	MarketCount	int
+}
+
 // Returns a list of Competitions (i.e., World Cup 2013) associated with the
 // markets selected by the MarketFilter.
 func (s *Session) ListCompetitions(filter *MarketFilter) ([]CompetitionResult, error) {
@@ -218,6 +225,17 @@ func (s *Session) ListMarketCatalogue(filter *MarketFilter, maxResults int) ([]M
 	params.MaxResults = maxResults
 	err := doBettingRequest(s, "listMarketCatalogue", params, &results)
 	return results, err
+}
+
+// Returns a list of market types (i.e. MATCH_ODDS, NEXT_GOAL) associated
+// with the markets selected by the MarketFilter. The market types are always
+// the same, regardless of locale.
+func (s *Session) ListMarketTypes (filter *MarketFilter) ([]MarketTypeResult, error) {
+	var results []MarketTypeResult
+	params := new(Params)
+	params.MarketFilter = filter
+	err := doBettingRequest(s, "listMarketTypes", params, &results)
+	return results, err	
 }
 
 func doBettingRequest(s *Session, method string, params *Params, v interface{}) error {
