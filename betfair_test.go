@@ -45,6 +45,7 @@ func TestNewSession(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+	defer file.Close()
 	dec := json.NewDecoder(file)
 	config := &Config{}
 	dec.Decode(&config)
