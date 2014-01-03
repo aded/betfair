@@ -1,9 +1,8 @@
 {
-	"Exchange"	: "UK",
 	"CertFile"	: "YOUR_CERT_FILE_HERE",
 	"KeyFile" 	: "YOUR_KEY_FILE_HERE",
 	"Username"	: "YOUR_USERNAME_HERE",
 	"Password"	: "YOUR_PASSWORD_HERE",
-	"AppKey"	: "YOUR_APPKEY_HERE",
+	"Exchange"	: "UK",
 	"Locale"	: "en"
 }

@@ -2,27 +2,18 @@ Betfair Golang Library
 ===
 Betfair is the leading company in online betting exchange. They are currently developing the next generation API for developers which want to automate their betting systems. For more info, please refer to [Betfair API-NG home](https://api.developer.betfair.com/services/webapps/docs/display/1smk3cen4v3lu3yomq5qye0ni/API-NG+Overview).
 
-This is a library for Golang. Please note that this is a pre-alpha version, so at the moment only a subset of the API methods are implemented. However, the project is active so new commits will be done frequently.
+I will write some articles [here](aded.it/tag/comp/betfair-golang-library).
 
-I will write some articles on the library [here](aded.it/tag/comp/betfair-golang-library).
+Please note that the only login method implemented is the [non-interactive (bot) login](https://api.developer.betfair.com/services/webapps/docs/display/1smk3cen4v3lu3yomq5qye0ni/Non-Interactive+%28bot%29+login).
 
 TODO
 ---
-The only login method implemented is the [non-interactive (bot) login](https://api.developer.betfair.com/services/webapps/docs/display/1smk3cen4v3lu3yomq5qye0ni/Non-Interactive+%28bot%29+login).
 
-Account API methods have to be implemented, as well as some Betting API methods.
-
-Methods implemented:
-
-* LoginNonInteractive
-* KeepAlive
-* Logout
-* ListCompetitions
-* ListCountries
-* ListEvents
-* ListEventTypes
-* ListMarketBook
-* ListMarketCatalogue
+* Betting API: order-related methods
+* Betting API: listTimeRanges, listVenues
+* Betting API: add all params to methods
+* Betting API: add all params to market filter
+* Betting API: improve support for horse racing
 
 Quick usage
 ---
