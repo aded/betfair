@@ -247,12 +247,12 @@ func doBettingRequest(s *Session, method string, params *Params, v interface{}) 
 		return err
 	}
 	body := strings.NewReader(string(bytes))
-	// log.Print(string(bytes))
+
 	data, err := doRequest(s, "betting", method + "/", body)
 	if err != nil {
 		return err
 	}
-	// log.Print(string(data))
+
 	if err := json.Unmarshal(data, v); err != nil {
 		return err
 	}
