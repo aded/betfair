@@ -30,10 +30,19 @@ package betfair
 
 import (
 	"errors"
+	"net"
 	"net/http"
 	"os"
 	"strings"
 	"io/ioutil"
+	"time"
+	"crypto/rand"
+	"crypto/tls"
+)
+
+const (
+	LIVE_DATA	= 0
+	DELAY_DATA	= 1
 )
 
 var ukEndpoints = map[string]string{
@@ -56,20 +65,20 @@ var endpointMap = map[string]map[string]string{
 }
 
 type Config struct {
-	Exchange	string
-	CertFile 	string
-	KeyFile 	string
 	Username 	string
 	Password 	string
-	AppKey 		string
+	CertFile 	string
+	KeyFile 	string
+	Exchange	string
 	Locale		string
 }
 
 type Session struct {
 	config		*Config
-	token 		string
 	httpClient	*http.Client
-	appKey 		string
+	token 		string
+	appKeys		[2]string
+	Live		bool
 }
 
 // Create a new session. Please note that you have to login to retrieve a
@@ -78,8 +87,12 @@ func NewSession(c *Config) (*Session, error) {
 
 	s := new(Session)
 
-	if _, exists := endpointMap[c.Exchange]; exists == false {
-		return s, errors.New("Invalid Config.Exchange: must be UK or AU.")
+	// Configuration
+	if c.Username == "" {
+		return s, errors.New("Config.Username is empty.")		
+	}
+	if c.Password == "" {
+		return s, errors.New("Config.Password is empty.")		
 	}
 	if _, err := os.Stat(c.CertFile); os.IsNotExist(err) {
 		return s, errors.New("Config.CertFile does not exist.")
@@ -87,20 +100,33 @@ func NewSession(c *Config) (*Session, error) {
 	if _, err := os.Stat(c.KeyFile); os.IsNotExist(err) {
 		return s, errors.New("Config.KeyFile does not exist.")
 	}
-	if c.Username == "" {
-		return s, errors.New("Config.Username is empty.")		
-	}
-	if c.Password == "" {
-		return s, errors.New("Config.Password is empty.")		
-	}
-	if c.AppKey == "" {
-		return s, errors.New("Config.AppKey is empty.")		
+	c.Exchange = strings.ToUpper(c.Exchange)
+	if _, exists := endpointMap[c.Exchange]; exists == false {
+		c.Exchange = "UK"
 	}
 	if c.Locale == "" {
 		c.Locale = "en"
 	}
-
 	s.config = c
+
+	// HTTP client
+	cert, err := tls.LoadX509KeyPair(s.config.CertFile, s.config.KeyFile)
+	if err != nil {
+		return s, err
+	}
+	ssl := &tls.Config {
+		Certificates: []tls.Certificate{cert},
+		InsecureSkipVerify: true,
+	}
+	ssl.Rand = rand.Reader
+	s.httpClient = &http.Client {
+		Transport: &http.Transport {
+			Dial: func(network, addr string) (net.Conn, error) {
+				return net.DialTimeout(network, addr, time.Duration(time.Second*3))
+			},
+			TLSClientConfig: ssl,
+		},
+	}
 
 	return s, nil
 }
@@ -125,11 +151,27 @@ func doRequest(s *Session, key, method string, body *strings.Reader) ([]byte, er
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("X-Application", s.config.AppKey)
-	req.Header.Add("X-Authentication", s.token)
 
+	req.Header.Set("Accept", "application/json")
+
+	if key == "certLogin" {
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		// In non-interactive login, X-Application is not validated
+		req.Header.Set("X-Application", "Betfair Golang Library")		
+	} else {
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Authentication", s.token)
+		if key == "account" && method == "getDeveloperAppKeys" {
+			req.Header.Del("X-Application")
+		} else {
+			if s.Live {
+				req.Header.Set("X-Application", s.appKeys[LIVE_DATA])
+			} else {
+				req.Header.Set("X-Application", s.appKeys[DELAY_DATA])				
+			}
+		}		
+	}
+	
 	res, err := s.httpClient.Do(req)
 	if err != nil {
 		return nil, err

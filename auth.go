@@ -25,14 +25,8 @@ package betfair
 
 import (
 	"errors"
-	"time"
-	"net"
-	"crypto/rand"
-	"crypto/tls"
 	"encoding/json"
 	"strings"
-	"io/ioutil"
-	"net/http"
 )
 
 type certLoginResult struct {
@@ -52,46 +46,10 @@ type keepAliveResult struct {
 // username and password, to authenticate your credentials and generate a
 // session token.
 func (s *Session) LoginNonInteractive() error {
-	url, err := s.getUrl("certLogin", "")
-	if err != nil {
-		return err
-	}
 
-	cert, err := tls.LoadX509KeyPair(s.config.CertFile, s.config.KeyFile)
-	if err != nil {
-		return err
-	}
+	body := strings.NewReader("username=" + s.config.Username + "&password=" + s.config.Password)
 
-	ssl := &tls.Config {
-		Certificates: []tls.Certificate{cert},
-		InsecureSkipVerify: true,
-	}
-	ssl.Rand = rand.Reader
-
-	s.httpClient = &http.Client {
-		Transport: &http.Transport {
-			Dial: func(network, addr string) (net.Conn, error) {
-				return net.DialTimeout(network, addr, time.Duration(time.Second*3))
-			},
-			TLSClientConfig: ssl,
-		},
-	}
-
-	reqBody := strings.NewReader("username=" + s.config.Username + "&password=" + s.config.Password)
-	req, _ := http.NewRequest("POST", url, reqBody)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("X-Application", s.config.AppKey)
-
-	res, err := s.httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	if res.StatusCode != 200 {
-		return errors.New(res.Status)
-	}
-	defer res.Body.Close()
-
-	data, err := ioutil.ReadAll(res.Body)
+	data, err := doRequest(s, "certLogin", "", body)
 	if err != nil {
 		return err
 	}
@@ -106,7 +64,26 @@ func (s *Session) LoginNonInteractive() error {
 	}
 
 	s.token = result.SessionToken
-		
+
+	// Get application keys. It seems we currently have one dev app only.
+	apps, err := s.GetDeveloperAppKeys()
+	if err != nil {
+		return err
+	}
+	if len(apps) < 1 {
+		return errors.New("Cannot get app keys")
+	}
+	if len(apps[0].AppVersions) != 2 {
+		return errors.New("Invalid amount of app versions")		
+	}
+	if apps[0].AppVersions[0].DelayData {
+		s.appKeys[DELAY_DATA] = apps[0].AppVersions[0].ApplicationKey
+		s.appKeys[LIVE_DATA] = apps[0].AppVersions[1].ApplicationKey
+	} else {
+		s.appKeys[DELAY_DATA] = apps[0].AppVersions[1].ApplicationKey
+		s.appKeys[LIVE_DATA] = apps[0].AppVersions[0].ApplicationKey		
+	}
+
 	return nil
 }
 
