@@ -17,58 +17,35 @@ TODO
 
 Quick usage
 ---
-I will provide more examples and documentation ASAP.
+See examples/*.
+
+Account info:
 <pre>
-package main
+go run examples/account_info.go -conf=betfair_test.conf.json
+</pre>
+Output:
+<pre>
+Alessandro De Donno (it)
+	Available: EUR x.xx
+	Exposure : EUR 0.00
+</pre>
 
-import (
-        "github.com/aded/betfair"
-        "fmt"
-        "log"
-)
-
-func main() {
-        // Configuration
-        config := new(betfair.Config)
-        config.Exchange = "UK" // UK or AU
-        config.CertFile = "YOUR_CERT_FILE_HERE"
-        config.KeyFile = "YOUR_KEY_FILE_HERE"
-        config.Username = "YOUR_USERNAME_HERE"
-        config.Password = "YOUR_PASSWORD_HERE"
-        config.AppKey = "YOUR_APPKEY_HERE"
-        config.Locale = "en"
-
-        // Create a new session
-        s, err := betfair.NewSession(config)
-        if err != nil {
-                log.Fatal(err)
-        }
-
-        // Create a market filter passed as arg to ListCompetitions
-        marketFilter := new(betfair.MarketFilter)
-        marketFilter.EventTypeIds = []string{"1"}
-        results, err := s.ListCompetitions(marketFilter)
-        if err != nil {
-                log.Fatal(err)
-        }
-        for _, result := range results {
-                fmt.Printf("%s (%d) from %s\n",
-                        result.Competition.Name, result.MarketCount, 
-                        result.CompetitionRegion)
-        }
-
-        // Do other stuff...
-
-        // KeepAlive
-        if err = s.KeepAlive(); err != nil {
-                log.Fatal(err)
-        }
- 
-        // Logout
-        if err = s.Logout(); err != nil {
-                log.Fatal(err)
-        }
-}
+Football events in GB:
+<pre>
+go run examples/football_events.go -conf=betfair_test.conf.json
+</pre>
+Output:
+<pre>
+(...)
+2014-01-04 15:00:00 +0000 UTC: [GB] Barnsley v Coventry (40 markets)
+2014-01-04 15:00:00 +0000 UTC: [GB] Bolton v Blackpool (40 markets)
+2014-01-04 15:00:00 +0000 UTC: [GB] Stoke v Leicester (78 markets)
+2014-01-04 15:00:00 +0000 UTC: [GB] West Brom v C Palace (78 markets)
+2014-01-04 15:00:00 +0000 UTC: [GB] Wigan v MK Dons (40 markets)
+2014-02-18 19:45:00 +0000 UTC: [GB] Man City v Barcelona (3 markets)
+2014-01-04 17:15:00 +0000 UTC: [GB] Arsenal v Tottenham (78 markets)
+2014-01-04 17:15:00 +0000 UTC: [GB] Fixtures 04 January   (1 markets)
+(...)
 </pre>
 
 Tests
@@ -81,6 +58,8 @@ You can find a sample configuration file in the main directory:
 <pre>
 betfair_test.conf.json.sample
 </pre>
+
+Please note that only username, password, certfile and keyfile are mandatory.
 
 License
 ---
